@@ -22,25 +22,43 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
         for(int x = 0; x < cflowmap.cols; x += step)
         {
             const Point2f& fxy = flow.at<Point2f>(y, x);
-            line(cflowmap, Point(x,y), Point(cvRound(x+fxy.x), cvRound(y+fxy.y)),
-                 Scalar(0, 0, 255),1,1);
-            circle(cflowmap, Point(x,y), 1, color, -1);
+            const Point stepPoint(x,y);
+            const Point flowPoint(cvRound(x+fxy.x), cvRound(y+fxy.y));
+
+            if(flowPoint != stepPoint)
+            {
+                line(cflowmap, stepPoint, flowPoint, color);
+            }
+
         }
 }
 Mat flow, cflow, frame;
 UMat gray, prevgray, uflow;
 int main() {
-    VideoCapture capture;// = VideoCapture("/home/bemcho/Movies/wall-e.mkv");
+    VideoCapture capture;// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
 
+    if(!capture.isOpened())
+    {
     namedWindow(window_name, WINDOW_OPENGL);
-    if(!capture.isOpened()) {
         for (int i = 1; i < 50; i++) {
             capture = VideoCapture(i);
             if (!capture.isOpened()) {
                 capture.release();
                 cout << "--(!)Error opening video capture\nYou do have camera plugged in, right?" << endl;
                 if (i == 49)
-                    return -1;
+                {
+                    capture = VideoCapture(0);
+                    if (!capture.isOpened())
+                    {
+                        capture.release();
+                        exit(-1);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
 
                 continue;
             } else {
@@ -59,6 +77,7 @@ int main() {
 
     while (true) {
 
+
         capture >> frame;
         cvtColor(frame, gray, COLOR_BGR2GRAY);
 
@@ -66,9 +85,10 @@ int main() {
         {
             calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
+
             uflow.copyTo(flow);
-            drawOptFlowMap(flow, cflow, 2, 1.5, Scalar(0, 255, 0));
-            imshow(window_name, cflow);
+            drawOptFlowMap(flow, frame, 2, 1.5, Scalar(255, 123, 0));
+            imshow(window_name, frame);
         }
         if(waitKey(1)==27)
             break;
