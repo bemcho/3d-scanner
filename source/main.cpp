@@ -55,10 +55,11 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 int main() {
     mutex queue_mutex;
     queue<cv::Mat> frames_queue;
-    for (size_t b = 0; b < 255; b+=10)
-        for (size_t g = 0; g < 255; g+=b+5)
-            for (size_t r = 0; r < 255; r+=g+b+15)
+    for (size_t i = 0; i < 255; i++)
     {
+        int b = theRNG().uniform(0,255);
+        int g = theRNG().uniform(0,255);
+        int r = theRNG().uniform(0,255);
         colors.push_back(Vec3b((uchar)b, (uchar)g, (uchar)r));
     }
     VideoCapture capture(0);// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
