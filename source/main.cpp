@@ -17,11 +17,18 @@ using std::endl;
 using std::string;
 
 using namespace caf;
+// Generate random colors
+vector<Vec3b> colors;
 
 const string window_name("Optical Flow Event Tracker");
 static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
                            double, const Scalar& color)
 {
+    Point prevFlow;
+    Point origin(0,0);
+    Scalar currentColor = color;
+    size_t currentColorIndex=0;
+
     for(int y = 0; y < cflowmap.rows; y += step)
         for(int x = 0; x < cflowmap.cols; x += step)
         {
@@ -31,16 +38,29 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 
             if(flowPoint != stepPoint)
             {
-                line(cflowmap, stepPoint, flowPoint, color);
+                if(cv::norm(flowPoint-prevFlow) > step * 2)
+                {
+                    currentColor = colors[cv::norm(flowPoint-origin)];
+                }
+                else
+                {
+                    currentColor = colors[cv::norm(flowPoint-prevFlow)];
+                }
+                line(cflowmap, stepPoint, flowPoint, currentColor);
             }
-
+            prevFlow = flowPoint;
         }
 }
 
 int main() {
     mutex queue_mutex;
     queue<cv::Mat> frames_queue;
-
+    for (size_t b = 0; b < 255; b+=10)
+        for (size_t g = 0; g < 255; g+=b+5)
+            for (size_t r = 0; r < 255; r+=g+b+15)
+    {
+        colors.push_back(Vec3b((uchar)b, (uchar)g, (uchar)r));
+    }
     VideoCapture capture(0);// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
 
     if(!capture.isOpened())
@@ -103,23 +123,12 @@ int main() {
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
 
             uflow.copyTo(flow);
-            drawOptFlowMap(flow, frame, 8, 1.5, Scalar(255, 123, 0));
+            drawOptFlowMap(flow, frame, 4, 1.5, Scalar(255, 255, 0));
             imshow(window_name, frame);
             frames_queue.push(frame.clone());
 
         }
-        if(frames_queue.size() > 1000)
-        {
-            std::async(std::launch::async, [&]
-            {
-                std::lock_guard<std::mutex> lock(queue_mutex);
-                while(frames_queue.size() > 0)
-                {
-                    writer.write(frames_queue.front());
-                    frames_queue.pop();
-                }
-            }).get();
-        }
+
 
 
         std::swap(prevgray, gray);
