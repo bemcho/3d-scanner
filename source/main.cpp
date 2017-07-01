@@ -35,36 +35,25 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 Mat flow, cflow, frame;
 UMat gray, prevgray, uflow;
 int main() {
-    VideoCapture capture;// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
+    VideoCapture capture(0);// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
 
     if(!capture.isOpened())
     {
     namedWindow(window_name, WINDOW_OPENGL);
-        for (int i = 1; i < 50; i++) {
+        for (int i = 1; i < 25; i++)
+        {
             capture = VideoCapture(i);
-            if (!capture.isOpened()) {
+            if (!capture.isOpened())
+            {
                 capture.release();
                 cout << "--(!)Error opening video capture\nYou do have camera plugged in, right?" << endl;
-                if (i == 49)
-                {
-                    capture = VideoCapture(0);
-                    if (!capture.isOpened())
-                    {
-                        capture.release();
-                        exit(-1);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
 
                 continue;
             } else {
                 cout << "--(!)Camera found on " << i << " device index.";
                 break;
             }
+            return  EXIT_FAILURE;
         }
     }
     capture.set(CAP_PROP_FRAME_WIDTH, 10000);
