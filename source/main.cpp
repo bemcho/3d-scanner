@@ -1,13 +1,9 @@
 #include <iostream>
 #include <queue>
-#include <string>
 #include <numeric>
 #include <future>
 #include <opencv2/videoio.hpp>
 #include <opencv/cv.hpp>
-
-#include "caf/all.hpp"
-
 
 using namespace cv;
 using namespace std;
@@ -16,18 +12,40 @@ using namespace std;
 using std::endl;
 using std::string;
 
-using namespace caf;
-// Generate random colors
-vector<Vec3b> colors;
 
 const string window_name("Optical Flow Event Tracker");
+Scalar getHeatMapColor(double value)
+{
+    const int NUM_COLORS = 9;
+    static float color[NUM_COLORS][3] = { {255,0,0}, {255,192,0},{0,255,64},{0,255,128}, {0,255,0},{64,0,64},{128,0,128}, {128,0,255}, {0,0,255} };
+    // A static array of 4 colors:  (blue,   green,  yellow,  red) using {r,g,b} for each.
+
+    int idx1;        // |-- Our desired color will be between these two indexes in "color".
+    int idx2;        // |
+    float fractBetween = 0;  // Fraction between "idx1" and "idx2" where our value is.
+
+    if(value <= 0)      {  idx1 = idx2 = 0;            }    // accounts for an input <=0
+    else if(value >= 1)  {  idx1 = idx2 = NUM_COLORS-1; }    // accounts for an input >=0
+    else
+    {
+        value = value * (NUM_COLORS-1);        // Will multiply value by 3.
+        idx1  = floor(value);                  // Our desired color will be after this index.
+        idx2  = idx1+1;                        // ... and before this index (inclusive).
+        fractBetween = value - float(idx1);    // Distance between the two indexes (0-1).
+    }
+
+    float red = ((color[idx2][0] - color[idx1][0])*fractBetween + color[idx1][0]);
+    float green = ((color[idx2][1] - color[idx1][1])*fractBetween + color[idx1][1]);
+    float blue  = ((color[idx2][2] - color[idx1][2])*fractBetween + color[idx1][2]);
+    return Scalar((uint)blue,(uint)green,(uint)red);
+}
+
 static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
                            double, const Scalar& color)
 {
     Point prevFlow;
     Point origin(0,0);
     Scalar currentColor = color;
-    size_t currentColorIndex=0;
 
     for(int y = 0; y < cflowmap.rows; y += step)
         for(int x = 0; x < cflowmap.cols; x += step)
@@ -38,14 +56,11 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 
             if(flowPoint != stepPoint)
             {
-                if(cv::norm(flowPoint-prevFlow) > step * 2)
+                if(cv::norm(prevFlow-flowPoint) > norm(step*1.5))
                 {
-                    currentColor = colors[cv::norm(flowPoint-origin)];
+                    currentColor = getHeatMapColor(cv::norm(origin-flowPoint)/255) ;
                 }
-                else
-                {
-                    currentColor = colors[cv::norm(flowPoint-prevFlow)];
-                }
+
                 line(cflowmap, stepPoint, flowPoint, currentColor);
             }
             prevFlow = flowPoint;
@@ -55,13 +70,6 @@ static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step,
 int main() {
     mutex queue_mutex;
     queue<cv::Mat> frames_queue;
-    for (size_t i = 0; i < 255; i++)
-    {
-        int b = theRNG().uniform(0,255);
-        int g = theRNG().uniform(0,255);
-        int r = theRNG().uniform(0,255);
-        colors.push_back(Vec3b((uchar)b, (uchar)g, (uchar)r));
-    }
     VideoCapture capture(0);// = VideoCapture("/Users/bemcho/Movies/wall-e.mkv");
 
     if(!capture.isOpened())
@@ -106,11 +114,11 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    namedWindow(window_name, WINDOW_OPENGL);
+
 
     Mat flow, cflow, frame;
     UMat gray, prevgray, uflow;
-
+    namedWindow(window_name, WINDOW_AUTOSIZE);
 
     while (true)
     {
@@ -151,8 +159,6 @@ int main() {
                 frames_queue.pop();
 
             }
-            putText(frame,"Done",Point(100,800),3,1,Scalar(255,213,123));
-            imshow(window_name, frame);
 
             break;
         }
