@@ -12,7 +12,7 @@ if(OpenCV_FOUND)
 endif()
 
 
-set(SOURCE_FILES source/main.cpp)
+set(SOURCE_FILES source/main.cpp source/ExtractContours.cpp source/ExtractContours.h)
 add_executable(3DScanner ${SOURCE_FILES})
 set(LIBS ${LIBS} ${OpenCV_LIBS} )
 target_link_libraries( 3DScanner  ${LIBS})

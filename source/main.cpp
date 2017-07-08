@@ -4,6 +4,7 @@
 #include <future>
 #include <opencv2/videoio.hpp>
 #include <opencv/cv.hpp>
+#include "ExtractContours.h"
 
 using namespace cv;
 using namespace std;
@@ -116,25 +117,31 @@ int main() {
 
 
 
-    Mat flow, cflow, frame;
+    Mat flow, cflow, frame, colorDenoised, edges;
     UMat gray, prevgray, uflow;
     namedWindow(window_name, WINDOW_AUTOSIZE);
+    opencvbox::initTrackBar(window_name);
 
     while (true)
     {
         capture >> frame;
+
         cvtColor(frame, gray, COLOR_BGR2GRAY);
+        //fastNlMeansDenoising(gray, gray);
         equalizeHist(gray, gray);
+        opencvbox::extractEdges(frame,edges);
 
         if( !prevgray.empty() )
         {
-            calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+            calcOpticalFlowFarneback(prevgray, gray, uflow, 0.5, 1, 40, 1, 5, 1.2, 0);
             cvtColor(prevgray, cflow, COLOR_GRAY2BGR);
 
             uflow.copyTo(flow);
-            drawOptFlowMap(flow, frame, 4, 1.5, Scalar(255, 255, 0));
-            imshow(window_name, frame);
-            frames_queue.push(frame.clone());
+            drawOptFlowMap(flow, edges, 4, 1.5, Scalar(255, 255, 0));
+            imshow(window_name, edges);
+
+            frames_queue.push(edges.clone());
 
         }
 
