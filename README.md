@@ -6,10 +6,15 @@ cmake -DWITH_LIBV4L=ON .. (this is important)
 to install needed libs 
 
 cd 3d-scanner/build
+
 cmake ..
+
 make
+
+cd ../bin
 
 ./3DScanner yourmovie.avi/webm/mp4 etc.
 
-If started without command line args will try to start the first camera it founds starting from: (0 for default eg. embedded camera).
+If started without command line args or passed filename is not fouind,
+the app will try to use the first camera it finds starting from: (0 for default eg. embedded camera).
 
