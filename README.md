@@ -1,10 +1,10 @@
 # 3d-scanner
-You need opencv built with-v4l in order to read from avi files 
-
-sudo apt-get install libv4l-dev 
-cmake -DWITH_LIBV4L=ON .. (this is important)
+You need opencv built with-v4l and with-ffmpeg fin order to read from avi files 
+```
+sudo apt-get install libv4l-dev ffmpeg
+cmake -DWITH_LIBV4L=ON -DWITH_FFMPEG=ON .. (this is important)
 to install needed libs 
-
+```
 cd 3d-scanner/build
 
 cmake ..
