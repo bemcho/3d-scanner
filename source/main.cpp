@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 {
     mutex queue_mutex;
     queue<cv::Mat> frames_queue;
-    VideoCapture capture(0);
+    VideoCapture capture;
     if (argc>1 && file_exist(argv[1])) {
         cout << "Trying to open file: '" << argv[1] << "'" << endl;
         capture = VideoCapture(string(argv[1]));
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
     if (!capture.isOpened()) {
 
-        for (int i = 1; i<25; i++) {
+        for (int i = 0; i<25; i++) {
             capture = VideoCapture(i);
             if (!capture.isOpened()) {
                 capture.release();
